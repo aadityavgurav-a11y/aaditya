@@ -48,7 +48,9 @@ export default function Hero() {
       "-=0.5"
     );
 
-    return () => tl.kill();
+    return () => {
+      tl.kill();
+    };
   }, []);
 
   const splitText = (text: string) => {
