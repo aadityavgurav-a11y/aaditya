@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased font-sans selection:bg-foreground selection:text-background;
+    /* Optional: Hide scrollbar for a cleaner look */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Hide cursor if custom cursor is active */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  /* Ensure links also hide default cursor */
+  a, button, [role="button"], input, select, textarea {
+    cursor: none;
+  }
+}
