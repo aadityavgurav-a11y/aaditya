@@ -1,41 +1,35 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-const LOCAL_VIDEO = '/video/hero.mp4';
-const REMOTE_VIDEO =
+const LOCAL_SRC = '/video/hero.mp4';
+const REMOTE_SRC =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_041744_63efcd78-bf7d-4039-99e2-2461e8a61903.mp4';
 const SENSITIVITY = 0.8;
 
 export const BackgroundVideo: React.FC = () => {
+  const [videoSrc, setVideoSrc] = useState(LOCAL_SRC);
   const videoRef = useRef<HTMLVideoElement>(null);
   const prevXRef = useRef<number | null>(null);
-  const targetTimeRef = useRef<number>(0.1);
+  const targetTimeRef = useRef<number>(0.8);
   const isSeekingRef = useRef<boolean>(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Force frame render immediately upon load so it is NEVER a black box
-    const renderFirstFrame = () => {
+    // Ensure frame renders on load
+    const forceRender = () => {
       try {
-        video.currentTime = 0.1;
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              video.pause();
-            })
-            .catch(() => {});
+        if (video.currentTime < 0.2) {
+          video.currentTime = 0.8;
+          targetTimeRef.current = 0.8;
         }
       } catch {
-        // Fallback
+        // ignore
       }
     };
 
-    video.addEventListener('loadeddata', renderFirstFrame);
-    if (video.readyState >= 2) {
-      renderFirstFrame();
-    }
+    video.addEventListener('loadeddata', forceRender);
+    video.addEventListener('canplay', forceRender);
 
     const handleMouseMove = (e: MouseEvent) => {
       if (prevXRef.current === null) {
@@ -103,7 +97,8 @@ export const BackgroundVideo: React.FC = () => {
     window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      video.removeEventListener('loadeddata', renderFirstFrame);
+      video.removeEventListener('loadeddata', forceRender);
+      video.removeEventListener('canplay', forceRender);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -125,21 +120,31 @@ export const BackgroundVideo: React.FC = () => {
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
     if (video) {
-      targetTimeRef.current = 0.1;
+      // Seek to 0.8s where the 3D red Mainframe visual is clearly visible
+      targetTimeRef.current = 0.8;
       try {
-        video.currentTime = 0.1;
+        video.currentTime = 0.8;
       } catch {
         // ignore
       }
     }
   };
 
+  const handleError = () => {
+    // Fall back to remote CDN if local fails
+    if (videoSrc !== REMOTE_SRC) {
+      setVideoSrc(REMOTE_SRC);
+    }
+  };
+
   return (
     <video
       ref={videoRef}
+      src={videoSrc}
       muted
       playsInline
       preload="auto"
+      onError={handleError}
       onSeeked={handleSeeked}
       onLoadedMetadata={handleLoadedMetadata}
       style={{
@@ -153,9 +158,6 @@ export const BackgroundVideo: React.FC = () => {
         pointerEvents: 'none',
         backgroundColor: '#000',
       }}
-    >
-      <source src={LOCAL_VIDEO} type="video/mp4" />
-      <source src={REMOTE_VIDEO} type="video/mp4" />
-    </video>
+    />
   );
 };

@@ -1,50 +1,67 @@
 import React, { useState } from 'react';
+import { Logo } from './Logo';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onNavClick?: (targetId: string) => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onNavClick }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = ['Labs', 'Studio', 'Openings', 'Shop'];
+  const navLinks = [
+    { label: 'Experience', id: 'experience' },
+    { label: 'Projects', id: 'projects' },
+    { label: 'Skills', id: 'skills' },
+    { label: 'Education', id: 'education' },
+    { label: 'About', id: 'about' },
+  ];
 
-  const handleLinkClick = () => {
+  const handleLinkClick = (id: string) => {
     setMobileMenuOpen(false);
+    if (onNavClick) {
+      onNavClick(id);
+    } else {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   };
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-10 px-5 sm:px-8 py-4 sm:py-5 flex flex-row justify-between items-center select-none">
+      <header className="fixed top-0 left-0 w-full z-20 px-5 sm:px-8 py-4 sm:py-5 flex flex-row justify-between items-center select-none backdrop-blur-sm bg-black/20 border-b border-white/5 transition-all">
         {/* Logo (left) */}
         <a
           href="#"
-          className="flex flex-row items-center gap-3 text-white focus:outline-none"
+          onClick={(e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="flex flex-row items-center gap-3 text-white focus:outline-none group cursor-pointer"
         >
+          <Logo size={32} />
           <span
-            className="text-[21px] sm:text-[26px] tracking-tight leading-none"
+            className="text-[20px] sm:text-[25px] tracking-tight font-heading leading-none group-hover:opacity-80 transition-opacity"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
-            Mainframe®
-          </span>
-          <span
-            className="text-[25px] sm:text-[30px] text-white select-none leading-none inline-block transform -translate-y-[1px]"
-            style={{ letterSpacing: '-0.02em' }}
-            aria-hidden="true"
-          >
-            ✳︎
+            Aaditya Gurav®
           </span>
         </a>
 
         {/* Desktop Nav Links (center, hidden below md) */}
-        <nav className="hidden md:flex flex-row items-center text-[23px] text-white">
-          {navLinks.map((link, idx) => (
-            <React.Fragment key={link}>
+        <nav className="hidden md:flex flex-row items-center text-[21px] text-white">
+          {navLinks.map((item, idx) => (
+            <React.Fragment key={item.id}>
               <a
-                href={`#${link.toLowerCase()}`}
+                href={`#${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleLinkClick();
+                  handleLinkClick(item.id);
                 }}
                 className="hover:opacity-60 transition-opacity cursor-pointer"
               >
-                {link}
+                {item.label}
               </a>
               {idx < navLinks.length - 1 && ', '}
             </React.Fragment>
@@ -52,10 +69,10 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* Desktop CTA (right, hidden below md) */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-4">
           <a
-            href="mailto:hello@mainframe.co"
-            className="text-[23px] text-white underline underline-offset-2 hover:opacity-60 transition-opacity cursor-pointer"
+            href="mailto:aaadityavgurav@gmail.com"
+            className="text-[21px] text-white underline underline-offset-2 hover:opacity-60 transition-opacity cursor-pointer"
           >
             Get in touch
           </a>
@@ -66,7 +83,7 @@ export const Navbar: React.FC = () => {
           type="button"
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="md:hidden relative z-20 flex flex-col justify-center items-center gap-[5px] w-8 h-8 focus:outline-none cursor-pointer"
+          className="md:hidden relative z-30 flex flex-col justify-center items-center gap-[5px] w-8 h-8 focus:outline-none cursor-pointer"
         >
           <span
             className={`w-6 h-[2px] bg-white transition-all duration-300 transform origin-center ${
@@ -86,34 +103,45 @@ export const Navbar: React.FC = () => {
         </button>
       </header>
 
-      {/* Mobile Overlay (z-index: 9) */}
+      {/* Mobile Overlay (z-index: 19) */}
       <div
-        className={`fixed inset-0 z-[9] bg-black/90 backdrop-blur-md flex flex-col justify-center items-start px-8 gap-8 transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[19] bg-black/95 backdrop-blur-md flex flex-col justify-center items-start px-8 gap-8 transition-opacity duration-300 md:hidden ${
           mobileMenuOpen
             ? 'opacity-100 pointer-events-auto'
             : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden={!mobileMenuOpen}
       >
-        {navLinks.map((link) => (
+        <div className="text-white/60 text-xs tracking-widest uppercase mb-2">
+          Navigation
+        </div>
+        {navLinks.map((item) => (
           <a
-            key={link}
-            href={`#${link.toLowerCase()}`}
+            key={item.id}
+            href={`#${item.id}`}
             onClick={(e) => {
               e.preventDefault();
-              handleLinkClick();
+              handleLinkClick(item.id);
             }}
             className="text-[32px] font-medium text-white hover:opacity-60 transition-opacity cursor-pointer"
           >
-            {link}
+            {item.label}
           </a>
         ))}
+        <div className="h-[1px] w-full bg-white/10 my-2" />
         <a
-          href="mailto:hello@mainframe.co"
+          href="mailto:aaadityavgurav@gmail.com"
           onClick={() => setMobileMenuOpen(false)}
-          className="text-[32px] font-medium text-white underline underline-offset-4 hover:opacity-60 transition-opacity cursor-pointer"
+          className="text-[28px] font-medium text-white underline underline-offset-4 hover:opacity-60 transition-opacity cursor-pointer"
         >
-          Get in touch
+          aaadityavgurav@gmail.com
+        </a>
+        <a
+          href="tel:9322378090"
+          onClick={() => setMobileMenuOpen(false)}
+          className="text-[22px] text-white/80 hover:text-white transition-opacity cursor-pointer"
+        >
+          +91 9322378090
         </a>
       </div>
     </>
