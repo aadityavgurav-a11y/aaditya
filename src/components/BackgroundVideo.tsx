@@ -1,40 +1,21 @@
 import React, { useEffect, useRef } from 'react';
 
-const LOCAL_VIDEO = '/video/hero.mp4';
-const REMOTE_VIDEO =
+const VIDEO_SRC =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_041744_63efcd78-bf7d-4039-99e2-2461e8a61903.mp4';
 const SENSITIVITY = 0.8;
 
 export const BackgroundVideo: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const prevXRef = useRef<number | null>(null);
-  const targetTimeRef = useRef<number>(0.1);
+  const targetTimeRef = useRef<number>(0.05);
   const isSeekingRef = useRef<boolean>(false);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-
-    // Force frame render immediately upon load so it is NEVER black
-    const renderFirstFrame = () => {
-      try {
-        video.currentTime = 0.1;
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              video.pause();
-            })
-            .catch(() => {});
-        }
-      } catch {
-        // Fallback
+    if (video) {
+      if (video.readyState >= 1 && video.currentTime === 0) {
+        video.currentTime = 0.05;
       }
-    };
-
-    video.addEventListener('loadeddata', renderFirstFrame);
-    if (video.readyState >= 2) {
-      renderFirstFrame();
     }
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -46,19 +27,20 @@ export const BackgroundVideo: React.FC = () => {
       const delta = e.clientX - prevXRef.current;
       prevXRef.current = e.clientX;
 
-      if (!video || !video.duration || isNaN(video.duration)) {
+      const vid = videoRef.current;
+      if (!vid || !vid.duration || isNaN(vid.duration)) {
         return;
       }
 
-      const timeDelta = (delta / window.innerWidth) * SENSITIVITY * video.duration;
+      const timeDelta = (delta / window.innerWidth) * SENSITIVITY * vid.duration;
       targetTimeRef.current = Math.min(
         Math.max(0, targetTimeRef.current + timeDelta),
-        video.duration
+        vid.duration
       );
 
       if (!isSeekingRef.current) {
         isSeekingRef.current = true;
-        video.currentTime = targetTimeRef.current;
+        vid.currentTime = targetTimeRef.current;
       }
     };
 
@@ -77,19 +59,20 @@ export const BackgroundVideo: React.FC = () => {
       const delta = currentX - prevXRef.current;
       prevXRef.current = currentX;
 
-      if (!video || !video.duration || isNaN(video.duration)) {
+      const vid = videoRef.current;
+      if (!vid || !vid.duration || isNaN(vid.duration)) {
         return;
       }
 
-      const timeDelta = (delta / window.innerWidth) * SENSITIVITY * video.duration;
+      const timeDelta = (delta / window.innerWidth) * SENSITIVITY * vid.duration;
       targetTimeRef.current = Math.min(
         Math.max(0, targetTimeRef.current + timeDelta),
-        video.duration
+        vid.duration
       );
 
       if (!isSeekingRef.current) {
         isSeekingRef.current = true;
-        video.currentTime = targetTimeRef.current;
+        vid.currentTime = targetTimeRef.current;
       }
     };
 
@@ -103,7 +86,6 @@ export const BackgroundVideo: React.FC = () => {
     window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      video.removeEventListener('loadeddata', renderFirstFrame);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -124,19 +106,16 @@ export const BackgroundVideo: React.FC = () => {
 
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
-    if (video) {
-      targetTimeRef.current = 0.1;
-      try {
-        video.currentTime = 0.1;
-      } catch {
-        // ignore
-      }
+    if (video && video.currentTime === 0) {
+      targetTimeRef.current = 0.05;
+      video.currentTime = 0.05;
     }
   };
 
   return (
     <video
       ref={videoRef}
+      src={VIDEO_SRC}
       muted
       playsInline
       preload="auto"
@@ -146,16 +125,11 @@ export const BackgroundVideo: React.FC = () => {
         position: 'fixed',
         inset: 0,
         zIndex: 0,
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         objectFit: 'cover',
         objectPosition: '70% center',
-        pointerEvents: 'none',
-        backgroundColor: '#000',
       }}
-    >
-      <source src={LOCAL_VIDEO} type="video/mp4" />
-      <source src={REMOTE_VIDEO} type="video/mp4" />
-    </video>
+    />
   );
 };
