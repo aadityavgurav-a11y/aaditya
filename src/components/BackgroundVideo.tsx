@@ -1,16 +1,42 @@
 import React, { useEffect, useRef } from 'react';
 
-const VIDEO_SRC =
+const LOCAL_VIDEO = '/video/hero.mp4';
+const REMOTE_VIDEO =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_041744_63efcd78-bf7d-4039-99e2-2461e8a61903.mp4';
 const SENSITIVITY = 0.8;
 
 export const BackgroundVideo: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const prevXRef = useRef<number | null>(null);
-  const targetTimeRef = useRef<number>(0);
+  const targetTimeRef = useRef<number>(0.1);
   const isSeekingRef = useRef<boolean>(false);
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Force frame render immediately upon load so it is NEVER black
+    const renderFirstFrame = () => {
+      try {
+        video.currentTime = 0.1;
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              video.pause();
+            })
+            .catch(() => {});
+        }
+      } catch {
+        // Fallback
+      }
+    };
+
+    video.addEventListener('loadeddata', renderFirstFrame);
+    if (video.readyState >= 2) {
+      renderFirstFrame();
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       if (prevXRef.current === null) {
         prevXRef.current = e.clientX;
@@ -20,7 +46,6 @@ export const BackgroundVideo: React.FC = () => {
       const delta = e.clientX - prevXRef.current;
       prevXRef.current = e.clientX;
 
-      const video = videoRef.current;
       if (!video || !video.duration || isNaN(video.duration)) {
         return;
       }
@@ -41,7 +66,6 @@ export const BackgroundVideo: React.FC = () => {
       prevXRef.current = null;
     };
 
-    // Touch support for mobile scrubbing
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 0) return;
       const currentX = e.touches[0].clientX;
@@ -53,7 +77,6 @@ export const BackgroundVideo: React.FC = () => {
       const delta = currentX - prevXRef.current;
       prevXRef.current = currentX;
 
-      const video = videoRef.current;
       if (!video || !video.duration || isNaN(video.duration)) {
         return;
       }
@@ -80,6 +103,7 @@ export const BackgroundVideo: React.FC = () => {
     window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
+      video.removeEventListener('loadeddata', renderFirstFrame);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -101,11 +125,11 @@ export const BackgroundVideo: React.FC = () => {
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
     if (video) {
-      targetTimeRef.current = 0;
+      targetTimeRef.current = 0.1;
       try {
-        video.currentTime = 0.001;
+        video.currentTime = 0.1;
       } catch {
-        // ignore if browser blocks immediate seek
+        // ignore
       }
     }
   };
@@ -113,7 +137,6 @@ export const BackgroundVideo: React.FC = () => {
   return (
     <video
       ref={videoRef}
-      src={VIDEO_SRC}
       muted
       playsInline
       preload="auto"
@@ -128,7 +151,11 @@ export const BackgroundVideo: React.FC = () => {
         objectFit: 'cover',
         objectPosition: '70% center',
         pointerEvents: 'none',
+        backgroundColor: '#000',
       }}
-    />
+    >
+      <source src={LOCAL_VIDEO} type="video/mp4" />
+      <source src={REMOTE_VIDEO} type="video/mp4" />
+    </video>
   );
 };
