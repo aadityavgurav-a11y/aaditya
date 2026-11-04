@@ -15,7 +15,7 @@ export const BackgroundVideo: React.FC = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Force frame render immediately upon load so it is NEVER black
+    // Force frame render immediately upon load so it is NEVER a black box
     const renderFirstFrame = () => {
       try {
         video.currentTime = 0.1;
